@@ -4,18 +4,19 @@ Created on Sat Jul 31 21:17:05 2021
 
 @author: BIGMATH
 
-In this script we perform 5 simulations with optimal parameters estimated for GBR
-data. Each simulation builds a new graph, which increases the robustness of the 
-model. 
+In this script, we perform five simulations with optimal parameters estimated for GBR data. 
+Each simulation builds a new graph, which increases the robustness of the model. 
 """
 
 
 import numpy as np
 import pandas as pd
-from Model2 import run_model2
+from Model import run_model
 from help_functions import get_p_e_vec, moving_average, data_handling, plot_mean_std, plot_simulations
-import os    
-os.chdir(r'C:\Users\Stevo\Desktop\ECMI_competition\CODE')
+import os
+data_path        = r'C:\User\...\Data'        # where to load the data from
+predictions_path = r'C:\User\...\Predictions' # where to save the esimated values
+os.chdir(data_path)
 Data_gbr = pd.read_csv('data_GBR.csv', index_col = 0)
 total_pop,flag_wp_sch, flag_hard_lock, vaccines, tests,testing_policy,contact_tracing,true_new_cases,true_new_deaths, true_hosp = data_handling(Data_gbr)
 flag_wp_sch = flag_wp_sch.values
@@ -38,13 +39,13 @@ test_num = (tests*sim_population/total_pop).astype(int)
 num_vac = (vaccines*sim_population/total_pop).astype(int)
 
 ###############################################################################
-repetition_number = 5  # in order to study variation of parameters
-num_days = 465         # to run full simulation
+repetition_number = 5  # in order to study the variation of parameters
+num_days = 465         # to run a full simulation
 
-v_eff = .9   # vaccine eff known
-p_i   = 1/13 # probability that an exposed node becomes infected. This should be reciprocal to the lenght of incubation period (in days).
-p_r   = 1/10 # probability that an infected node recovers (reciprocal to the average lenght of a recovery).
-p_s   = 1/14 # probability of a susceptible or exposed node leaving the quarantine. This value should be reciprocal to the lenght of quarantine (in days)
+v_eff = .9   # The vaccine efficacy (known)
+p_i   = 1/13 # The probability that an exposed node becomes infected. This should be reciprocal to the length of the incubation period (in days).
+p_r   = 1/10 # The probability that an infected node recovers (reciprocal to the average length of recovery).
+p_s   = 1/14 # The probability of a susceptible or exposed node leaving the quarantine. This value should be reciprocal to the length of quarantine (in days)
 
 p_sy_h = 1/25
 p_h_d  = 1/50
@@ -74,7 +75,7 @@ plot_mean_std(dD_mtx,pop_factor,true_deaths_ma,'Daily Deaths')
 plot_mean_std(dPos,pop_factor,true_new_cases_ma,'Daily Confirmed Cases')
 plot_mean_std(cH,pop_factor,true_hosp_ma,'Currently Hospitalized Cases')
 
-os.chdir(r'C:\Users\Stevo\Desktop\ECMI_competition\Predictions')
+os.chdir(predictions_path)
 np.save('gbr_dH_mtx.npy',  dH_mtx)
 np.save('gbr_dE_mtx.npy',  dE_mtx)
 np.save('gbr_dR_mtx.npy',  dR_mtx)
