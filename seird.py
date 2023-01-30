@@ -10,7 +10,7 @@ import networkx as nx
 
 def seird_iteration(L,E,R,D,Asy,Sy,H,Q_Asy,Q_Sy,Q_S,Q_E,V,kids,p_e,p_i,p_r,p_sy_d,p_h_d,p_h_r,p_asy,p_sy_h,v_eff,p_s,num_vac=0,test_policy='no_testing',test_num=0,p_sy_t = .5,contact_tracing=False,p_ct=1,return_count=False):
     ''' This function performs a single iteration of a model. It returns 
-    updated parameters, and optionally counts of new cases, deaths,..
+    updated parameters, and optionally counts new cases, deaths, etc.
     Parameters:
                L - graph representing the population
                E - list; exposed nodes of graph L
@@ -61,12 +61,12 @@ def seird_iteration(L,E,R,D,Asy,Sy,H,Q_Asy,Q_Sy,Q_S,Q_E,V,kids,p_e,p_i,p_r,p_sy_
                    new exposed, infected, recovered and dead nodes.
     '''
     # We start with testing.
-    # Depending on a testing policy, we have different sampling of the nodes.
+    # Depending on a testing policy, we have different samplings of the nodes.
     if test_policy == 'no_testing':
         positive = []
     else:
-        # In case of random testings, we exclude these nodes that are already confirmed positive,
-        # (which is hoospitalized, quarantined and so on).
+        # In case of random testings, we exclude these nodes that are already confirmed positive
+        # (which are hospitalized, quarantined, and so on).
         # Nodes that test positive get quarantined.
         if test_policy == 'random':
             # a percentage of tests is taken specifically from Sy
@@ -87,7 +87,7 @@ def seird_iteration(L,E,R,D,Asy,Sy,H,Q_Asy,Q_Sy,Q_S,Q_E,V,kids,p_e,p_i,p_r,p_sy_
             Sy = list(set(Sy).difference(set(positive_sy)))
             positive = list(set(positive_asy+positive_sy))
             
-        # If we test only symptomatic node, we assume that they all end up positive.
+        # If we test only symptomatic nodes, we assume that they all end up positive.
         elif test_policy == 'symptomatic':
             positive = list(set(np.random.choice(Sy,size=min(test_num,len(Sy)),replace=False)))
             Q_Sy += positive
@@ -96,7 +96,7 @@ def seird_iteration(L,E,R,D,Asy,Sy,H,Q_Asy,Q_Sy,Q_S,Q_E,V,kids,p_e,p_i,p_r,p_sy_
         else:
             print('Choose correct parameter value!!!')   
             
-    # Now update Quaranteened nodes - they can change their state with given probabiliteis...
+    # Now update quarantined nodes - they can change their state with given probabilities...
     # Asymptomatic nodes can only change to recovered:
     prob_1 = np.random.rand(len(Q_Asy))
     qasy_to_R = list(np.array(Q_Asy)[np.where(prob_1<p_r)[0]])
@@ -118,7 +118,7 @@ def seird_iteration(L,E,R,D,Asy,Sy,H,Q_Asy,Q_Sy,Q_S,Q_E,V,kids,p_e,p_i,p_r,p_sy_
     H += qsy_to_H
     H = list(set(H))
     Q_Sy = list(set(Q_Sy).difference(set(qsy_to_H)))  
-    # Exposed can get infected (i.e. go to Q_Asy or Q_Sy with respective probabilities) or leave a quaranteen
+    # Exposed can get infected (i.e., go to Q_Asy or Q_Sy with respective probabilities) or leave a quarantine
     prob_3 = np.random.rand(len(Q_E))
     qe_to_I = list(np.array(Q_E)[np.where(prob_3<p_i)[0]])
     prob_4 = np.random.rand(len(qe_to_I))
@@ -134,23 +134,22 @@ def seird_iteration(L,E,R,D,Asy,Sy,H,Q_Asy,Q_Sy,Q_S,Q_E,V,kids,p_e,p_i,p_r,p_sy_
     E += qe_to_E
     E = list(set(E))
     Q_E = list(set(Q_E).difference(set(qe_to_E)))  
-    # Susceptible nodes leave quaranteen with probability p_s
+    # Susceptible nodes leave quarantine with probability p_s
     qs_to_S = list(np.array(Q_S)[np.where(np.random.rand(len(Q_S))<p_s)[0]])
     Q_S = list(set(Q_S).difference(set(qs_to_S)))  
-    
     
     # New Exposed nodes (S --> E):
     # probability of getting exposed additionally depends on the fact that a node was vaccinated or not.
     neighbors_all = [list(L.neighbors(node_i))[j] for node_i in Asy+Sy for j in range(len(list(L.neighbors(node_i))))]
     contact_nodes = set(neighbors_all).difference(set(R+D+Asy+Sy+H+Q_E+Q_Asy+Q_Sy+Q_S+E)) #  remove those that are not susceptible
-    contact_nodes_v = list(contact_nodes & set(V))# vaccinated
-    contact_nodes_nv = list(contact_nodes.difference(contact_nodes_v)) # non-vaccinated
+    contact_nodes_v = list(contact_nodes & set(V))                                        # vaccinated
+    contact_nodes_nv = list(contact_nodes.difference(contact_nodes_v))                    # non-vaccinated
     s_to_E = list(np.array(contact_nodes_v)[np.where(np.random.rand(len(contact_nodes_v))<p_e*(1-v_eff))[0]]) + list(np.array(contact_nodes_nv)[np.where(np.random.rand(len(contact_nodes_nv))<p_e)[0]])
     E += s_to_E
     E = list(set(E))
     
     # New infected nodes (E --> I)
-    # each node that was exposed has probablity p_i to become infected
+    # Each node that was exposed has a probability p_i of becoming infected
     e_to_I = list(set(np.array(E)[np.where(np.random.rand(len(E))<p_i)[0]]))
     E = list(set(E).difference(set(e_to_I)))
     e_to_Iv = list(set(e_to_I)&set(V))
@@ -167,8 +166,8 @@ def seird_iteration(L,E,R,D,Asy,Sy,H,Q_Asy,Q_Sy,Q_S,Q_E,V,kids,p_e,p_i,p_r,p_sy_
     
     # Recovery, hospitalization and death (I --> R, I --> H, I --> D)
     # each infected node can recover with probability p_r... 
-    #... but if it was symptomatic it can also get hospitalized (with prob. p_sy_h) or die (p_sy_d).
-    # Check first for symptomatic nodes:
+    # ... but if it was symptomatic it can also get hospitalized (with prob. p_sy_h) or die (p_sy_d).
+    # Check first for the symptomatic nodes:
     prob_6 = np.random.rand(len(Sy))
     sy_to_R = list(np.array(Sy)[np.where(prob_6<p_r)[0]])
     sy_to_D = list(np.array(Sy)[np.where(prob_6>1-p_sy_d)[0]])
@@ -199,14 +198,14 @@ def seird_iteration(L,E,R,D,Asy,Sy,H,Q_Asy,Q_Sy,Q_S,Q_E,V,kids,p_e,p_i,p_r,p_sy_
     R = list(set(R))
     H = list(set(H).difference(set(h_to_D+h_to_R)))
     
-    # vaccinating (we consider only Susceptible, exposed and asymptomatic nodes):
+    # vaccinating (we consider only susceptible, exposed and asymptomatic nodes):
     sample_nodes = list(set(L.nodes()).difference(H+D+Sy+Q_Asy+Q_Sy+V+kids))
     new_vaccines = np.random.choice(sample_nodes,size=min(num_vac,len(sample_nodes)),replace=False) 
     V += list(new_vaccines)
     V = list(set(V))
 
     # Contact tracing.
-    # Check nodes that tested positive today, and set (some of) their neighbors in quaranteen    
+    # Check nodes that tested positive today, and set (some of) their neighbors in quarantine    
     neighbors = [list(L.neighbors(node_i))[j] for node_i in positive for j in range(len(list(L.neighbors(node_i))))]
     neighbors = set(neighbors)
     contact_nodes = list(neighbors.difference(set(D+R+H+Q_E+Q_S+Q_Asy+Q_Sy+positive)))
@@ -228,8 +227,7 @@ def seird_iteration(L,E,R,D,Asy,Sy,H,Q_Asy,Q_Sy,Q_S,Q_E,V,kids,p_e,p_i,p_r,p_sy_
     Sy = list(set(Sy).difference(set(sy_to_qsy)))
     Q_S += s_to_qs
     Q_S = list(set(Q_S))
-
-            
+    
     # Now update the counts
     new_Asy = e_to_asy
     new_Sy = e_to_sy
