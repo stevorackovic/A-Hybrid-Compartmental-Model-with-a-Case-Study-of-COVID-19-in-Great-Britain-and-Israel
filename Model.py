@@ -5,10 +5,10 @@ Created on Thu Jul 29 00:30:56 2021
 """
 
 import numpy as np
-from networks1 import create_networks2
+from networks import create_networks
 from seird import seird_iteration
 
-def get_networks2(M,reg_sizes,kids_perc,k=4):
+def get_networks(M,reg_sizes,kids_perc,k=4):
     Networks       = [[] for m in range(M)] 
     L_hard_lock_reg= [[] for m in range(M)]
     L_s_reg        = [[] for m in range(M)]
@@ -27,7 +27,7 @@ def get_networks2(M,reg_sizes,kids_perc,k=4):
         L_hard_lock_reg[m], L_s_reg[m],L_m_reg[m],L_l_reg[m], R_s_reg[m], R_m_reg[m], R_l_reg[m] = Networks[m]        
     return L_hard_lock_reg, L_s_reg, L_m_reg,L_l_reg, R_s_reg, R_m_reg, R_l_reg, kids_all_reg, Networks
 
-def run_model2(M, reg_sizes, p_e_vector, p_i, p_r, p_sy_d, p_h_d, p_h_r, p_asy, p_sy_h, v_eff, tests, testing_policy, vaccines,
+def run_model(M, reg_sizes, p_e_vector, p_i, p_r, p_sy_d, p_h_d, p_h_r, p_asy, p_sy_h, v_eff, tests, testing_policy, vaccines,
               p_s, contact_tracing, repetition_number, num_days, flag_wp_sch, flag_hard_lock,
               p_sy_t, day_init,n_I_init,n_E_init,kids_perc,k=4,probs_ct=[.65,.8],mix_perc=[0,.25]):
     '''
@@ -71,7 +71,7 @@ def run_model2(M, reg_sizes, p_e_vector, p_i, p_r, p_sy_d, p_h_d, p_h_r, p_asy, 
     for repetition in range(repetition_number):
 
         print('Run', repetition, 'of', repetition_number)
-        # Lists where we add new hospitalized, exposed, recovered... for each region separatelly:
+        # Lists where we add new hospitalized, exposed, recovered... for each region separately:
         H_reg, E_reg, R_reg, D_reg, Asy_reg, Sy_reg, Q_Asy_reg, Q_Sy_reg, V_reg, Q_S_reg, Q_E_reg = [
             [[] for m in range(M)] for i in range(11)]
         # Lists where we add new hospitalized, exposed, recovered... for a whole graph (all the regions):
@@ -175,7 +175,7 @@ def run_model2(M, reg_sizes, p_e_vector, p_i, p_r, p_sy_d, p_h_d, p_h_r, p_asy, 
             H_list.append(cH)  # currently hospitalized
             N_C.append(New_cases)
 
-            # new expositions from interaction between regions
+            # new exposures from the interaction between the regions
             if flag_hard_lock[day]:
                 mix_c = mix_perc[0]
             else:
